@@ -36,7 +36,7 @@ def signup():
         image = request.files['image']
         
         # save the image file to disk
-        filepath = '../Data/images/'+name+'.png'
+        filepath = 'Data/images/'+name+'.png'
         image.save(filepath)
         if(process_profile_img(filepath) == False):
             os.remove(filepath)
