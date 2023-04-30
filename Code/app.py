@@ -34,30 +34,29 @@ def signup():
         email = request.form['email']
         password = request.form['password']
         image = request.files['image']
-        #save the image file to disk
-        #image.save('static/images/' + image.filename)
-        #image.save('../Data/images/' + name +'.png')
-        #filepath = '../Data/images/'+name+'.png'
-        filepath = 'Data/images/'+name+'.png'
+        
+        # save the image file to disk
+        filepath = '../Data/images/'+name+'.png'
         image.save(filepath)
         if(process_profile_img(filepath) == False):
             os.remove(filepath)
-            return '<div style="text-align:center;"> <p>Issue with Image Please upload an image with face!!</p><a href="/">Login</a></div>'
+            #return render_template('message.html', message='Issue with Image Please upload an image with face!!')
+            return render_template('message.html', message='Issue with Image Please upload an image with face!!', buttonMessage='Sign up', urlMsg="/signup")
         
         # create a new user in the database
         cursor = mysql_conn.cursor()
-        #query = "INSERT INTO users (name, email, password, image) VALUES (%s, %s, %s, %s)"
-       
         query = "INSERT INTO users (username, email, password, image) VALUES (%s, %s, %s, %s)"
-        #values = (name, email, password, 'static/images/' + image.filename)
-        #values = (name, email, password, '../Data/images/' + name +'.png')
         values = (name, email, password, filepath)
-        cursor.execute(query, values)
-        mysql_conn.commit()
-        cursor.close()
-        
-        # render a success message to the user
-        return '<div style="text-align:center;"> <p>User created successfully!!</p><a href="/">Login</a></div>'
+        try:
+            cursor.execute(query, values)
+            mysql_conn.commit()
+            cursor.close()
+            return render_template('message.html', message='User created successfully!', buttonMessage='Login', urlMsg="/")
+        except:
+            mysql_conn.rollback()
+            cursor.close()
+            os.remove(filepath)
+            return render_template('message.html', message='Error creating user. Please try again.', buttonMessage='Sign up', urlMsg="/signup")
     
     # if the request method is GET, render the signup form
     return render_template('signup.html')
@@ -94,56 +93,24 @@ def login_post():
 
         # check if the user exists in the database
         cur = mysql_conn.cursor(buffered=True)
-        #cur.execute('SELECT * FROM users WHERE name = %s', [username])
         cur.execute('SELECT * FROM users WHERE username = %s', [username])
         user = cur.fetchone()
         cur.close()
-        print(user)
-        """
-        if username == 'admin' and password == 'password':
-        #return render_template('face.html')
-        return Response(pipeLine.runPipeline(), mimetype='multipart/x-mixed-replace; boundary=frame')
-        """
-        #if username==user[1] and password==user[3]:
-        if username==user[0] and password==user[2]:
+
+        if user is None:
+            # if the username doesn't exist in the database
+            message = "Username does not exist"
+            return render_template('message.html', message=message, buttonMessage='Login', urlMsg="/")
+
+        elif username==user[0] and password==user[2]:
             # if the username and password are correct, log the user in
-            #session['user_id'] = user[0]
-            #session['username'] = user[1]
-            #global UserName
-            #global UserImage
-            #UserName = user[1]
-            #UserImage = user[4]
-            #UserName = user[0]
-            #UserImage = user[3]
-            # redirect the user to the home page
             return render_template('webcam.html', user = user)
 
         else:
-            #return redirect('/error', code=302)
-            return redirect('/error')
-'''
-@app.route('/video_feed', methods=['POST'])
-def login_post():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+            # if the password is incorrect
+            message = "Incorrect password"
+            return render_template('message.html', message=message, buttonMessage='Login', urlMsg="/")
 
-        # check if the user exists in the database
-        cur = mysql_conn.cursor()
-        cur.execute('SELECT * FROM users WHERE username = %s', [username])
-        result = cur.fetchone()
-        if result:
-            if password == result[2]:
-                global UserName
-                global UserImage
-                UserName = result[0]
-                UserImage = result[3]
-                return render_template('webcam.html')
-        return redirect('/')
-    
-    cur.close() # Close the cursor to properly handle the result set
-    mysql_conn.close() # Close the database connection after using it
-'''        
 @app.route('/error')
 def errorPg():
    return 'Incorrect username or pass'
