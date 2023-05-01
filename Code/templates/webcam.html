@@ -1,5 +1,29 @@
+{% if not session.logged_in %}
+  {% set message = "Please log in to access this page." %}
+  {% set buttonMessage = "Login" %}
+  {% set urlMsg = "/" %}
+  {% include 'message.html' %}
+{% else %}
+<!-- show the video feed here -->
+
 <!DOCTYPE html>
 <html>
+<head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="0">
+
+  <style>
+      h1 {
+        text-align: center;
+      }
+      form {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
+  </style>
+ </head>  
 <span class="error"></span>
 <br>
 <div style="display: flex">
@@ -17,11 +41,15 @@
   <div>Spoof: <span id="Spoof"></span></div>
 </div>
 <br>
+    <h1>Welcome {{ session.username }}!</h1>
+    <form action="{{ url_for('logout') }}" method="post">
+        <input type="submit" value="Logout">
+    </form>
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
 
 
-//show an error if not supported
+// show an error if not supported
 if (typeof OffscreenCanvas === "undefined") {
   const supportError = "OffscreenCanvas is not supported by your browser";
   const errorSpan = document.querySelector("span.error");
@@ -163,3 +191,5 @@ window.onbeforeunload = function() {
 </script>
 
 </html>
+
+{% endif %}
